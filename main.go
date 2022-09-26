@@ -32,7 +32,7 @@ func welcomeHandler(writer http.ResponseWriter, request *http.Request) {
 }
 
 func listHandler(writer http.ResponseWriter, request *http.Request) {
-	templates["list"].Execute(writer, nil)
+	templates["list"].Execute(writer, responses)
 }
 
 type formData struct {
@@ -54,13 +54,30 @@ func formHandler(writer http.ResponseWriter, request *http.Request) {
 			WillAttend: request.Form["willattend"][0] == "true",
 		}
 
-		responses = append(responses, &responseData)
-
-		if responseData.WillAttend {
-			templates["thanks"].Execute(writer, responseData.Name)
-		} else {
-			templates["sorry"].Execute(writer, responseData.Name)
+		errors := []string{}
+		if responseData.Name == "" {
+			errors = append(errors, "Пожалуйста, введите ваше имя")
 		}
+		if responseData.Email == "" {
+			errors = append(errors, "Пожалуйста, введите ваш email")
+		}
+		if responseData.Phone == "" {
+			errors = append(errors, "Пожалуйста, введите ваш номер телефона")
+		}
+		if len(errors) > 0 {
+			templates["form"].Execute(writer, formData{
+				Rsvp: &responseData, Errors: errors,
+			})
+		} else {
+			responses = append(responses, &responseData)
+
+			if responseData.WillAttend {
+				templates["thanks"].Execute(writer, responseData.Name)
+			} else {
+				templates["sorry"].Execute(writer, responseData.Name)
+			}
+		}
+
 	}
 }
 
